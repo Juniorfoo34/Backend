@@ -21,11 +21,11 @@ router.get('/', async (req, res, next) => {
         f.nombreCompleto AS nombreFuncionario,
         s.idEstadoActual,
         e.nombreEstado
-      FROM Solicitud s
-      JOIN Usuario u         ON s.idUsuario       = u.idUsuario
-      JOIN Tramite t         ON s.idTramite        = t.idTramite
-      JOIN Funcionario f     ON s.idFuncionario    = f.idFuncionario
-      JOIN EstadoSolicitud e ON s.idEstadoActual   = e.idEstado
+      FROM solicitud s
+      JOIN usuario u         ON s.idUsuario       = u.idUsuario
+      JOIN tramite t         ON s.idTramite        = t.idTramite
+      JOIN funcionario f     ON s.idFuncionario    = f.idFuncionario
+      JOIN estadosolicitud e ON s.idEstadoActual   = e.idEstado
       WHERE 1=1
     `;
     const params = [];
@@ -76,12 +76,12 @@ router.get('/:id', async (req, res, next) => {
         s.idEstadoActual,
         e.nombreEstado,
         fn_tiene_pago(s.idSolicitud) AS tienePago
-       FROM Solicitud s
-       JOIN Usuario u         ON s.idUsuario     = u.idUsuario
-       JOIN Tramite t         ON s.idTramite      = t.idTramite
-       JOIN Unidad un         ON t.idUnidad       = un.idUnidad
-       JOIN Funcionario f     ON s.idFuncionario  = f.idFuncionario
-       JOIN EstadoSolicitud e ON s.idEstadoActual = e.idEstado
+       FROM solicitud s
+       JOIN usuario u         ON s.idUsuario     = u.idUsuario
+       JOIN tramite t         ON s.idTramite      = t.idTramite
+       JOIN unidad un         ON t.idUnidad       = un.idUnidad
+       JOIN funcionario f     ON s.idFuncionario  = f.idFuncionario
+       JOIN estadosolicitud e ON s.idEstadoActual = e.idEstado
        WHERE s.idSolicitud = ?`,
       [req.params.id]
     );
@@ -124,14 +124,14 @@ router.put('/:id', async (req, res, next) => {
     const { id } = req.params;
 
     const [check] = await db.query(
-      'SELECT idSolicitud FROM Solicitud WHERE idSolicitud = ?', [id]
+      'SELECT idSolicitud FROM solicitud WHERE idSolicitud = ?', [id]
     );
     if (check.length === 0) {
       return res.status(404).json({ error: 'Solicitud no encontrada' });
     }
 
     await db.query(
-      'UPDATE Solicitud SET descripcion = ?, idFuncionario = ? WHERE idSolicitud = ?',
+      'UPDATE solicitud SET descripcion = ?, idFuncionario = ? WHERE idSolicitud = ?',
       [descripcion, idFuncionario, id]
     );
 
@@ -152,7 +152,7 @@ router.patch('/:id/estado', async (req, res, next) => {
     }
 
     const [check] = await db.query(
-      'SELECT idSolicitud FROM Solicitud WHERE idSolicitud = ?', [id]
+      'SELECT idSolicitud FROM solicitud WHERE idSolicitud = ?', [id]
     );
     if (check.length === 0) {
       return res.status(404).json({ error: 'Solicitud no encontrada' });
@@ -170,7 +170,7 @@ router.patch('/:id/estado', async (req, res, next) => {
 router.delete('/:id', async (req, res, next) => {
   try {
     const [check] = await db.query(
-      'SELECT idSolicitud, idEstadoActual FROM Solicitud WHERE idSolicitud = ?',
+      'SELECT idSolicitud, idEstadoActual FROM solicitud WHERE idSolicitud = ?',
       [req.params.id]
     );
     if (check.length === 0) {
@@ -178,12 +178,12 @@ router.delete('/:id', async (req, res, next) => {
     }
 
     // Eliminar dependencias en orden correcto
-    await db.query('DELETE FROM AdjuntoComentario WHERE idComentario IN (SELECT idComentario FROM Comentario WHERE idSolicitud = ?)', [req.params.id]);
-    await db.query('DELETE FROM Comentario       WHERE idSolicitud = ?', [req.params.id]);
-    await db.query('DELETE FROM Documento        WHERE idSolicitud = ?', [req.params.id]);
-    await db.query('DELETE FROM Pago             WHERE idSolicitud = ?', [req.params.id]);
-    await db.query('DELETE FROM HistorialEstado  WHERE idSolicitud = ?', [req.params.id]);
-    await db.query('DELETE FROM Solicitud        WHERE idSolicitud = ?', [req.params.id]);
+    await db.query('DELETE FROM adjuntocomentario WHERE idComentario IN (SELECT idComentario FROM comentario WHERE idSolicitud = ?)', [req.params.id]);
+    await db.query('DELETE FROM comentario       WHERE idSolicitud = ?', [req.params.id]);
+    await db.query('DELETE FROM documento        WHERE idSolicitud = ?', [req.params.id]);
+    await db.query('DELETE FROM pago             WHERE idSolicitud = ?', [req.params.id]);
+    await db.query('DELETE FROM historialestado  WHERE idSolicitud = ?', [req.params.id]);
+    await db.query('DELETE FROM solicitud        WHERE idSolicitud = ?', [req.params.id]);
 
     res.json({ message: 'Solicitud eliminada' });
   } catch (err) {
@@ -200,9 +200,9 @@ router.get('/:id/historial', async (req, res, next) => {
         h.fechaCambio,
         e.nombreEstado,
         f.nombreCompleto AS nombreFuncionario
-       FROM HistorialEstado h
-       JOIN EstadoSolicitud e ON h.idEstado      = e.idEstado
-       JOIN Funcionario f     ON h.idFuncionario = f.idFuncionario
+       FROM historialestado h
+       JOIN estadosolicitud e ON h.idEstado      = e.idEstado
+       JOIN funcionario f     ON h.idFuncionario = f.idFuncionario
        WHERE h.idSolicitud = ?
        ORDER BY h.fechaCambio ASC`,
       [req.params.id]
@@ -224,10 +224,10 @@ router.get('/:id/comentarios', async (req, res, next) => {
         COALESCE(CONCAT(u.nombre, ' ', u.apellido), f.nombreCompleto) AS autor,
         CASE WHEN c.idFuncionario IS NOT NULL THEN 'funcionario' ELSE 'usuario' END AS tipoAutor,
         a.archivo AS adjunto
-       FROM Comentario c
-       LEFT JOIN Usuario    u ON c.idUsuario    = u.idUsuario
-       LEFT JOIN Funcionario f ON c.idFuncionario = f.idFuncionario
-       LEFT JOIN AdjuntoComentario a ON a.idComentario = c.idComentario
+       FROM comentario c
+       LEFT JOIN usuario    u ON c.idUsuario    = u.idUsuario
+       LEFT JOIN funcionario f ON c.idFuncionario = f.idFuncionario
+       LEFT JOIN adjuntocomentario a ON a.idComentario = c.idComentario
        WHERE c.idSolicitud = ?
        ORDER BY c.fechaComentario ASC`,
       [req.params.id]
@@ -252,7 +252,7 @@ router.post('/:id/comentarios', async (req, res, next) => {
     }
 
     const [result] = await db.query(
-      `INSERT INTO Comentario (texto, fechaComentario, idSolicitud, idFuncionario, idUsuario)
+      `INSERT INTO comentario (texto, fechaComentario, idSolicitud, idFuncionario, idUsuario)
        VALUES (?, CURRENT_DATE, ?, ?, ?)`,
       [texto, id, idFuncionario || null, idUsuario || null]
     );

@@ -15,8 +15,8 @@ router.get('/', async (req, res, next) => {
         u.idTipoUsuario,
         t.nombreTipoUsuario,
         fn_total_solicitudes_usuario(u.idUsuario) AS totalSolicitudes
-       FROM Usuario u
-       JOIN TipoUsuario t ON u.idTipoUsuario = t.idTipoUsuario
+       FROM usuario u
+       JOIN tipousuario t ON u.idTipoUsuario = t.idTipoUsuario
        ORDER BY u.apellido ASC`
     );
     res.json(rows);
@@ -34,8 +34,8 @@ router.get('/:id', async (req, res, next) => {
         u.correoElectronico, u.telefono, u.fechaRegistro,
         u.idTipoUsuario, t.nombreTipoUsuario,
         fn_total_solicitudes_usuario(u.idUsuario) AS totalSolicitudes
-       FROM Usuario u
-       JOIN TipoUsuario t ON u.idTipoUsuario = t.idTipoUsuario
+       FROM usuario u
+       JOIN tipousuario t ON u.idTipoUsuario = t.idTipoUsuario
        WHERE u.idUsuario = ?`,
       [req.params.id]
     );
@@ -56,14 +56,14 @@ router.post('/', async (req, res, next) => {
     }
 
     const [dup] = await db.query(
-      'SELECT idUsuario FROM Usuario WHERE correoElectronico = ?', [correoElectronico]
+      'SELECT idUsuario FROM usuario WHERE correoElectronico = ?', [correoElectronico]
     );
     if (dup.length > 0) {
       return res.status(409).json({ error: 'El correo ya está registrado' });
     }
 
     const [result] = await db.query(
-      `INSERT INTO Usuario (nombre, apellido, correoElectronico, telefono, contrasena, fechaRegistro, idTipoUsuario)
+      `INSERT INTO usuario (nombre, apellido, correoElectronico, telefono, contrasena, fechaRegistro, idTipoUsuario)
        VALUES (?, ?, ?, ?, ?, CURRENT_DATE, ?)`,
       [nombre, apellido, correoElectronico, telefono || null, contrasena, idTipoUsuario]
     );
@@ -80,11 +80,11 @@ router.put('/:id', async (req, res, next) => {
     const { nombre, apellido, telefono, idTipoUsuario } = req.body;
     const { id } = req.params;
 
-    const [check] = await db.query('SELECT idUsuario FROM Usuario WHERE idUsuario = ?', [id]);
+    const [check] = await db.query('SELECT idUsuario FROM usuario WHERE idUsuario = ?', [id]);
     if (check.length === 0) return res.status(404).json({ error: 'Usuario no encontrado' });
 
     await db.query(
-      'UPDATE Usuario SET nombre = ?, apellido = ?, telefono = ?, idTipoUsuario = ? WHERE idUsuario = ?',
+      'UPDATE usuario SET nombre = ?, apellido = ?, telefono = ?, idTipoUsuario = ? WHERE idUsuario = ?',
       [nombre, apellido, telefono || null, idTipoUsuario, id]
     );
 
@@ -97,17 +97,17 @@ router.put('/:id', async (req, res, next) => {
 // DELETE /api/usuarios/:id
 router.delete('/:id', async (req, res, next) => {
   try {
-    const [check] = await db.query('SELECT idUsuario FROM Usuario WHERE idUsuario = ?', [req.params.id]);
+    const [check] = await db.query('SELECT idUsuario FROM usuario WHERE idUsuario = ?', [req.params.id]);
     if (check.length === 0) return res.status(404).json({ error: 'Usuario no encontrado' });
 
     const [hasSolicitudes] = await db.query(
-      'SELECT COUNT(*) AS total FROM Solicitud WHERE idUsuario = ?', [req.params.id]
+      'SELECT COUNT(*) AS total FROM solicitud WHERE idUsuario = ?', [req.params.id]
     );
     if (hasSolicitudes[0].total > 0) {
       return res.status(409).json({ error: 'No se puede eliminar: el usuario tiene solicitudes asociadas' });
     }
 
-    await db.query('DELETE FROM Usuario WHERE idUsuario = ?', [req.params.id]);
+    await db.query('DELETE FROM usuario WHERE idUsuario = ?', [req.params.id]);
     res.json({ message: 'Usuario eliminado' });
   } catch (err) {
     next(err);

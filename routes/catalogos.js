@@ -7,8 +7,8 @@ router.get('/tramites', async (req, res, next) => {
     const [rows] = await db.query(
       `SELECT t.idTramite, t.tipoTramite, t.descripcion,
               t.normativa, t.requierePago, u.nombreUnidad
-       FROM Tramite t
-       JOIN Unidad u ON t.idUnidad = u.idUnidad
+       FROM tramite t
+       JOIN unidad u ON t.idUnidad = u.idUnidad
        ORDER BY t.tipoTramite ASC`
     );
     res.json(rows);
@@ -19,7 +19,7 @@ router.get('/tramites', async (req, res, next) => {
 router.get('/estados', async (req, res, next) => {
   try {
     const [rows] = await db.query(
-      'SELECT idEstado, nombreEstado FROM EstadoSolicitud ORDER BY idEstado ASC'
+      'SELECT idEstado, nombreEstado FROM estadosolicitud ORDER BY idEstado ASC'
     );
     res.json(rows);
   } catch (err) { next(err); }
@@ -29,7 +29,7 @@ router.get('/estados', async (req, res, next) => {
 router.get('/unidades', async (req, res, next) => {
   try {
     const [rows] = await db.query(
-      'SELECT idUnidad, nombreUnidad, ubicacion, descripcion FROM Unidad ORDER BY nombreUnidad ASC'
+      'SELECT idUnidad, nombreUnidad, ubicacion, descripcion FROM unidad ORDER BY nombreUnidad ASC'
     );
     res.json(rows);
   } catch (err) { next(err); }
@@ -39,7 +39,7 @@ router.get('/unidades', async (req, res, next) => {
 router.get('/tipos-usuario', async (req, res, next) => {
   try {
     const [rows] = await db.query(
-      'SELECT idTipoUsuario, nombreTipoUsuario FROM TipoUsuario ORDER BY idTipoUsuario ASC'
+      'SELECT idTipoUsuario, nombreTipoUsuario FROM tipousuario ORDER BY idTipoUsuario ASC'
     );
     res.json(rows);
   } catch (err) { next(err); }

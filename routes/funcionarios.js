@@ -15,9 +15,9 @@ router.get('/', async (req, res, next) => {
         f.cargo,
         f.idUsuario,
         un.nombreUnidad
-       FROM Funcionario f
-       LEFT JOIN Tramite t  ON t.idUnidad = f.idFuncionario
-       LEFT JOIN Unidad un  ON un.idUnidad = f.idFuncionario
+       FROM funcionario f
+       LEFT JOIN tramite t  ON t.idUnidad = f.idFuncionario
+       LEFT JOIN unidad un  ON un.idUnidad = f.idFuncionario
        ORDER BY f.nombreCompleto ASC`
     );
     res.json(rows);

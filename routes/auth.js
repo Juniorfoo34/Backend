@@ -14,9 +14,9 @@ router.post('/login', async (req, res, next) => {
       `SELECT u.idUsuario, u.nombre, u.apellido, u.correoElectronico,
               u.idTipoUsuario, t.nombreTipoUsuario,
               f.idFuncionario, f.cargo
-       FROM Usuario u
-       JOIN TipoUsuario t ON u.idTipoUsuario = t.idTipoUsuario
-       LEFT JOIN Funcionario f ON f.idUsuario = u.idUsuario
+       FROM usuario u
+       JOIN tipousuario t ON u.idTipoUsuario = t.idTipoUsuario
+       LEFT JOIN funcionario f ON f.idUsuario = u.idUsuario
        WHERE u.correoElectronico = ? AND u.contrasena = ?`,
       [correoElectronico, contrasena]
     );
